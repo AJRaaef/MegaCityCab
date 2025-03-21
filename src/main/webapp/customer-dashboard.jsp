@@ -9,39 +9,70 @@
   String username = (String) session.getAttribute("username");
 %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Customer Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard | MegaCityCab</title>
   <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <style>
-    body { background-color: #f8f9fa; }
-    .vehicle-card { margin-bottom: 20px; }
-    .carousel-inner img { width: 100%; height: 200px; object-fit: cover; }
-    .navbar-brand { font-weight: bold; }
+    body {
+      background-color: #121212;
+      color: white;
+    }
+    .navbar {
+      background-color: #1f1f1f;
+    }
+    .navbar-brand {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .card {
+      background: #1c1c1c;
+      color: white;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.05);
+    }
+    .card img {
+      height: 200px;
+      object-fit: cover;
+    }
+    .filter-section {
+      background: #1f1f1f;
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .btn-primary {
+      background: #ff9800;
+      border: none;
+    }
+    .btn-primary:hover {
+      background: #e68900;
+    }
   </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark">
   <a class="navbar-brand" href="#">MegaCityCab</a>
-  <div class="collapse navbar-collapse">
-    <ul class="navbar-nav ml-auto">
-      <li class="nav-item"><a class="nav-link" href="#">Welcome, <%= username %></a></li>
-      <li class="nav-item"><a class="nav-link btn " href="customer-dashboard.jsp">Home</a></li>
-      <li class="nav-item"><a class="nav-link" href="bookings.jsp">Your Bookings</a></li>
-      <li class="nav-item"><a class="nav-link btn btn-danger text-white" href="Logout.jsp">Logout</a></li>
-      <li class="nav-item"><a class="nav-link btn " href="profile.jsp">Profile</a></li>
-
-    </ul>
+  <div class="ml-auto">
+    <a class="btn btn-outline-light" href="profile.jsp">Welcome, <%= username %></a>
+    <a class="btn btn-warning ml-2" href="bookings.jsp">Your Bookings</a>
+    <a class="btn btn-danger ml-2" href="Logout.jsp">Logout</a>
   </div>
 </nav>
 
 <div class="container mt-4">
-  <h2>Available Vehicles</h2>
+  <h2 class="text-center mb-4">🚗 Available Vehicles</h2>
 
-  <!-- 🔹 Search & Filter Section -->
-  <div class="row mb-3">
+  <!-- Filters -->
+  <div class="row filter-section text-white mb-4">
     <div class="col-md-4">
       <label>Vehicle Type:</label>
       <select class="form-control" id="vehicleTypeFilter">
@@ -63,28 +94,26 @@
   </div>
 
   <div class="row" id="vehicleList">
-    <%
-      try (Connection conn = DBConnection.getConnection();
-           Statement stmt = conn.createStatement();
-           ResultSet rs = stmt.executeQuery("SELECT * FROM vehicles WHERE status='available'")) {
-
-        while (rs.next()) {
-          int id = rs.getInt("id");
-          String vehicleName = rs.getString("vehicle_name");
-          String model = rs.getString("model");
-          String vehicleType = rs.getString("vehicle_type");
-          int capacity = rs.getInt("capacity");
-          double pricePerDay = rs.getDouble("price_per_day");
-          String photo1 = ImageUtil.getImageURL(rs.getString("photo1"));
+    <% try (Connection conn = DBConnection.getConnection();
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM vehicles WHERE status='available'")) {
+      while (rs.next()) {
+        int id = rs.getInt("id");
+        String vehicleName = rs.getString("vehicle_name");
+        String model = rs.getString("model");
+        String vehicleType = rs.getString("vehicle_type");
+        int capacity = rs.getInt("capacity");
+        double pricePerDay = rs.getDouble("price_per_day");
+        String photo1 = ImageUtil.getImageURL(rs.getString("photo1"));
     %>
-    <div class="col-md-4 vehicle-card" data-type="<%= vehicleType %>" data-capacity="<%= capacity %>" data-price="<%= pricePerDay %>">
+    <div class="col-md-4 vehicle-card mb-4" data-type="<%= vehicleType %>" data-capacity="<%= capacity %>" data-price="<%= pricePerDay %>">
       <div class="card">
         <img src="<%= photo1 %>" class="card-img-top">
-        <div class="card-body">
-          <h5 class="card-title"><%= vehicleName %></h5>
-          <p class="card-text"><strong>Model:</strong> <%= model %></p>
-          <p class="card-text"><strong>Capacity:</strong> <%= capacity %> people</p>
-          <p class="card-text"><strong>Price per Day:</strong> LKR <%= pricePerDay %></p>
+        <div class="card-body text-center">
+          <h5 class="card-title">🚘 <%= vehicleName %></h5>
+          <p class="card-text">Model: <strong><%= model %></strong></p>
+          <p class="card-text">Capacity: <strong><%= capacity %></strong> people</p>
+          <p class="card-text">Price per Day: <strong>LKR <%= pricePerDay %></strong></p>
           <a href="bookVehicle.jsp?vehicleId=<%= id %>" class="btn btn-primary btn-block">Book Now</a>
         </div>
       </div>
@@ -93,7 +122,7 @@
   </div>
 </div>
 
-<!-- 🔹 JavaScript for Filtering -->
+<!-- JavaScript for Filtering -->
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
   $(document).ready(function () {
@@ -116,8 +145,7 @@
     });
   });
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

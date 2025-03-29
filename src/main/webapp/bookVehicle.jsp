@@ -142,53 +142,58 @@
 <head>
   <title>Book Vehicle</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <style>
-    .vehicle-details, .booking-form {
-      margin: 20px;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
+    .container {
+      max-width: 700px;
+      margin: auto;
     }
-    .booking-form label {
-      font-weight: bold;
+    .card {
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .btn-custom {
+      width: 100%;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2 class="mt-4">Book Vehicle</h2>
+<div class="container mt-5">
+  <h2 class="text-center">🚗 Book a Vehicle</h2>
 
-  <!-- Display Vehicle and Driver Details -->
-  <div class="vehicle-details">
-    <h3>Vehicle Details</h3>
+  <!-- Vehicle & Driver Details -->
+  <div class="card p-3 my-4">
+    <h4><i class="fas fa-car"></i> Vehicle Details</h4>
     <p><b>Name:</b> <%= vehicleName %></p>
     <p><b>Model:</b> <%= model %></p>
     <p><b>Capacity:</b> <%= capacity %> persons</p>
     <p><b>Price per Day:</b> $<%= pricePerDay %></p>
     <p><b>Vehicle Type:</b> <%= vehicleType %></p>
-    <h3>Driver Details</h3>
-    <p><b>Driver Name:</b> <%= driverName %></p>
-    <p><b>Driver Phone:</b> <%= driverPhone %></p>
+
+    <h4><i class="fas fa-user"></i> Driver Details</h4>
+    <p><b>Name:</b> <%= driverName %></p>
+    <p><b>Phone:</b> <%= driverPhone %></p>
   </div>
 
   <!-- Booking Form -->
-  <div class="booking-form">
-    <h3>Enter Booking Details</h3>
+  <div class="card p-3">
+    <h4>📅 Booking Details</h4>
     <form action="" method="post">
       <div class="mb-3">
-        <label for="startDate">Start Date:</label>
+        <label for="startDate" class="form-label">Start Date:</label>
         <input type="date" id="startDate" name="startDate" class="form-control" required>
       </div>
       <div class="mb-3">
-        <label for="endDate">End Date:</label>
+        <label for="endDate" class="form-label">End Date:</label>
         <input type="date" id="endDate" name="endDate" class="form-control" required>
       </div>
       <div class="mb-3">
-        <label for="totalAmount">Total Amount ($):</label>
+        <label for="totalAmount" class="form-label">Total Amount ($):</label>
         <input type="text" id="totalAmount" name="totalAmount" class="form-control" readonly>
       </div>
-      <button type="button" class="btn btn-secondary" onclick="calculateTotal()">Calculate Price</button>
-      <button type="submit" class="btn btn-primary">Confirm Booking</button>
+      <button type="button" class="btn btn-secondary btn-custom" onclick="calculateTotal()">💰 Calculate Price</button>
+      <button type="submit" class="btn btn-primary btn-custom">✅ Confirm Booking</button>
     </form>
   </div>
 </div>
@@ -201,11 +206,11 @@
 
     if (startDate && endDate && endDate > startDate) {
       const timeDifference = endDate - startDate;
-      const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+      const totalDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
       const totalAmount = pricePerDay * totalDays;
       document.getElementById("totalAmount").value = totalAmount.toFixed(2);
     } else {
-      alert("Please select valid start and end dates.");
+      alert("⚠️ Please select valid start and end dates.");
     }
   }
 </script>

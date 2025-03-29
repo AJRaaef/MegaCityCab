@@ -8,11 +8,7 @@
 
 <%
 
-    HttpSession sessionObj = request.getSession(false);
-    if (sessionObj == null || sessionObj.getAttribute("userId") == null) {
-        response.sendRedirect("adminLogin.jsp?error=Please login first");
-        return;
-    }
+
 
 
 
@@ -29,7 +25,8 @@
             errorMessage = "Error: Unable to connect to the database.";
         } else {
             // Query for getting all drivers
-            String driverQuery = "SELECT id, full_name FROM drivers";
+            String driverQuery = "SELECT id, full_name FROM drivers WHERE id NOT IN (SELECT driver_id FROM vehicles WHERE driver_id IS NOT NULL)";
+
             ps = conn.prepareStatement(driverQuery);
             rs = ps.executeQuery();
         }
@@ -162,14 +159,25 @@
             <div class="mb-3">
                 <label for="driverId">Driver:</label>
                 <select id="driverId" name="driverId" class="form-control" required>
-                    <option value="">Select Driver</option>
-                    <% while (rs.next()) { %>
+                    <%
+                        boolean hasDrivers = false;
+                        while (rs.next()) {
+                            hasDrivers = true;
+                    %>
                     <option value="<%= rs.getInt("id") %>">
                         <%= rs.getString("full_name") %>
                     </option>
-                    <% } %>
+                    <%
+                        }
+                        if (!hasDrivers) {
+                    %>
+                    <option value="">No drivers available</option>
+                    <%
+                        }
+                    %>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label for="photo1">Photo 1:</label>
                 <input type="file" id="photo1" name="photo1" class="form-control" accept="image/*">

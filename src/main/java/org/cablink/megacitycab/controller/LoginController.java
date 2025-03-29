@@ -46,7 +46,7 @@ public class LoginController extends HttpServlet {
             }
         } else {
             // Redirect back to login with an error message
-            response.sendRedirect("login.jsp?error=Invalid usernam password");
+            response.sendRedirect("login.jsp?error=Invalid username password");
         }
     }
 }

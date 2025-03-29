@@ -1,11 +1,10 @@
 <%@ page import="java.sql.*, org.cablink.megacitycab.util.DBConnection, java.io.File, jakarta.servlet.http.Part" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%
-    // Initialize variables
+    // Initialize variables for vehicle and driver details
     String errorMessage = "";
     String successMessage = "";
 
-    // Fetch vehicle details if vehicleId is provided
     int vehicleId = 0;
     String vehicleName = "";
     String model = "";
@@ -18,12 +17,22 @@
     String photo2 = "";
     String photo3 = "";
 
+    String driverUsername = "";
+    String driverFullName = "";
+    String driverEmail = "";
+    String driverPhoneNumber = "";
+    String driverNic = "";
+    String driverLicenseNumber = "";
+
+    // Check if the vehicleId parameter is passed
     if (request.getParameter("vehicleId") != null) {
         vehicleId = Integer.parseInt(request.getParameter("vehicleId"));
 
-        // Fetch vehicle details from the database
+        // Fetch vehicle and driver details from the database
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM vehicles WHERE id = ?")) {
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "SELECT v.*, d.username, d.full_name, d.email, d.phone_number, d.nic, d.license_number " +
+                             "FROM vehicles v JOIN drivers d ON v.driver_id = d.id WHERE v.id = ?")) {
 
             pstmt.setInt(1, vehicleId);
             ResultSet rs = pstmt.executeQuery();
@@ -39,18 +48,34 @@
                 photo1 = rs.getString("photo1");
                 photo2 = rs.getString("photo2");
                 photo3 = rs.getString("photo3");
+
+                // Fetch driver details
+                driverUsername = rs.getString("username");
+                driverFullName = rs.getString("full_name");
+                driverEmail = rs.getString("email");
+                driverPhoneNumber = rs.getString("phone_number");
+                driverNic = rs.getString("nic");
+                driverLicenseNumber = rs.getString("license_number");
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            errorMessage = "Error: Unable to fetch vehicle details.";
+            errorMessage = "Error: Unable to fetch vehicle and driver details.";
         }
     } else {
         errorMessage = "Error: Vehicle ID is missing.";
     }
 
-    // Check if the form is submitted
+    // Debugging: print the fetched details
+    System.out.println("<h4>Debugging Vehicle Data</h4>");
+    System.out.println("<p>Vehicle ID: " + vehicleId + "</p>");
+    System.out.println("<p>Vehicle Name: " + vehicleName + "</p>");
+    System.out.println("<p>Driver Username: " + driverUsername + "</p>");
+    System.out.println("<p>Driver Full Name: " + driverFullName + "</p>");
+    System.out.println("<p>Driver Email: " + driverEmail + "</p>");
+
+    // Handle form submission to update data
     if ("POST".equalsIgnoreCase(request.getMethod())) {
-        // Handle file uploads
+        // Handle file uploads and form submissions
         String uploadPath = application.getRealPath("") + "uploads";
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
@@ -94,49 +119,23 @@
             }
         }
 
-        // If no new photo is uploaded, retain the existing photo path
-        if (photo1 == null || photo1.isEmpty()) {
-            photo1 = request.getParameter("existingPhoto1");
-        }
-        if (photo2 == null || photo2.isEmpty()) {
-            photo2 = request.getParameter("existingPhoto2");
-        }
-        if (photo3 == null || photo3.isEmpty()) {
-            photo3 = request.getParameter("existingPhoto3");
-        }
-
-        // Update the vehicle details in the database
+        // Update the vehicle and driver details in the database
         try (Connection conn = DBConnection.getConnection()) {
-            String query = "UPDATE vehicles SET vehicle_name = ?, model = ?, vehicle_type = ?, capacity = ?, price_per_day = ?, status = ?, driver_id = ?, photo1 = ?, photo2 = ?, photo3 = ? WHERE id = ?";
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            pstmt.setString(1, vehicleName);
-            pstmt.setString(2, model);
-            pstmt.setString(3, vehicleType);
-            pstmt.setInt(4, capacity);
-            pstmt.setDouble(5, pricePerDay);
-            pstmt.setString(6, status);
-            pstmt.setInt(7, driverId);
-            pstmt.setString(8, photo1);
-            pstmt.setString(9, photo2);
-            pstmt.setString(10, photo3);
-            pstmt.setInt(11, vehicleId);
+            String vehicleQuery = "UPDATE vehicles SET vehicle_name = ?, model = ?, vehicle_type = ?, capacity = ?, price_per_day = ?, status = ?, driver_id = ?, photo1 = ?, photo2 = ?, photo3 = ? WHERE id = ?";
+            PreparedStatement vehiclePstmt = conn.prepareStatement(vehicleQuery);
+            vehiclePstmt.setString(1, vehicleName);
+            vehiclePstmt.setString(2, model);
+            vehiclePstmt.setString(3, vehicleType);
+            vehiclePstmt.setInt(4, capacity);
+            vehiclePstmt.setDouble(5, pricePerDay);
+            vehiclePstmt.setString(6, status);
+            vehiclePstmt.setInt(7, driverId);
+            vehiclePstmt.setString(8, photo1);
+            vehiclePstmt.setString(9, photo2);
+            vehiclePstmt.setString(10, photo3);
+            vehiclePstmt.setInt(11, vehicleId);
 
-            // Debug: Print the SQL query and parameters
-            System.out.println("Executing Query: " + query);
-            System.out.println("Parameters:");
-            System.out.println("1. Vehicle Name: " + vehicleName);
-            System.out.println("2. Model: " + model);
-            System.out.println("3. Vehicle Type: " + vehicleType);
-            System.out.println("4. Capacity: " + capacity);
-            System.out.println("5. Price Per Day: " + pricePerDay);
-            System.out.println("6. Status: " + status);
-            System.out.println("7. Driver ID: " + driverId);
-            System.out.println("8. Photo 1: " + photo1);
-            System.out.println("9. Photo 2: " + photo2);
-            System.out.println("10. Photo 3: " + photo3);
-            System.out.println("11. Vehicle ID: " + vehicleId);
-
-            int rowsUpdated = pstmt.executeUpdate();
+            int rowsUpdated = vehiclePstmt.executeUpdate();
             if (rowsUpdated > 0) {
                 successMessage = "Vehicle updated successfully!";
             } else {
@@ -179,6 +178,7 @@
         <input type="hidden" name="existingPhoto2" value="<%= photo2 %>">
         <input type="hidden" name="existingPhoto3" value="<%= photo3 %>">
 
+        <!-- Vehicle Details -->
         <div class="form-group">
             <label for="vehicleName">Vehicle Name</label>
             <input type="text" id="vehicleName" name="vehicleName" class="form-control" value="<%= vehicleName %>" required>
@@ -205,67 +205,69 @@
         </div>
 
         <div class="form-group">
-            <label for="pricePerDay">Price Per Day</label>
-            <input type="number" step="0.01" id="pricePerDay" name="pricePerDay" class="form-control" value="<%= pricePerDay %>" required>
+            <label for="pricePerDay">Price per Day</label>
+            <input type="number" id="pricePerDay" name="pricePerDay" class="form-control" value="<%= pricePerDay %>" required>
         </div>
 
         <div class="form-group">
             <label for="status">Status</label>
             <select id="status" name="status" class="form-control" required>
                 <option value="available" <%= "available".equals(status) ? "selected" : "" %>>Available</option>
-                <option value="booking" <%= "booking".equals(status) ? "selected" : "" %>>Booking</option>
-                <option value="processing" <%= "processing".equals(status) ? "selected" : "" %>>Processing</option>
+                <option value="booked" <%= "booked".equals(status) ? "selected" : "" %>>Booked</option>
+                <option value="maintenance" <%= "maintenance".equals(status) ? "selected" : "" %>>Maintenance</option>
             </select>
         </div>
 
+        <!-- Driver Details -->
+        <h3>Driver Details</h3>
         <div class="form-group">
-            <label for="driverId">Driver</label>
-            <select id="driverId" name="driverId" class="form-control" required>
-                <option value="">Select Driver</option>
-                <%
-                    try (Connection conn = DBConnection.getConnection();
-                         PreparedStatement pstmt = conn.prepareStatement("SELECT id, full_name FROM drivers");
-                         ResultSet rs = pstmt.executeQuery()) {
-
-                        while (rs.next()) {
-                            int id = rs.getInt("id");
-                            String fullName = rs.getString("full_name");
-                %>
-                <option value="<%= id %>" <%= id == driverId ? "selected" : "" %>><%= fullName %></option>
-                <%
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                %>
-            </select>
+            <label for="driverUsername">Username</label>
+            <input type="text" id="driverUsername" name="driverUsername" class="form-control" value="<%= driverUsername %>" required>
         </div>
 
         <div class="form-group">
-            <label for="photo1">Photo 1</label>
+            <label for="driverFullName">Full Name</label>
+            <input type="text" id="driverFullName" name="driverFullName" class="form-control" value="<%= driverFullName %>" required>
+        </div>
+
+        <div class="form-group">
+            <label for="driverEmail">Email</label>
+            <input type="email" id="driverEmail" name="driverEmail" class="form-control" value="<%= driverEmail %>" required>
+        </div>
+
+        <div class="form-group">
+            <label for="driverPhoneNumber">Phone Number</label>
+            <input type="text" id="driverPhoneNumber" name="driverPhoneNumber" class="form-control" value="<%= driverPhoneNumber %>" required>
+        </div>
+
+        <div class="form-group">
+            <label for="driverNic">NIC</label>
+            <input type="text" id="driverNic" name="driverNic" class="form-control" value="<%= driverNic %>" required>
+        </div>
+
+        <div class="form-group">
+            <label for="driverLicenseNumber">License Number</label>
+            <input type="text" id="driverLicenseNumber" name="driverLicenseNumber" class="form-control" value="<%= driverLicenseNumber %>" required>
+        </div>
+
+        <!-- Photos -->
+        <div class="form-group">
+            <label for="photo1">Upload Photo 1</label>
             <input type="file" id="photo1" name="photo1" class="form-control">
-            <small class="form-text text-muted">Current photo: <%= photo1 != null && !photo1.isEmpty() ? photo1 : "No photo available" %></small>
         </div>
 
         <div class="form-group">
-            <label for="photo2">Photo 2</label>
+            <label for="photo2">Upload Photo 2</label>
             <input type="file" id="photo2" name="photo2" class="form-control">
-            <small class="form-text text-muted">Current photo: <%= photo2 != null && !photo2.isEmpty() ? photo2 : "No photo available" %></small>
         </div>
 
         <div class="form-group">
-            <label for="photo3">Photo 3</label>
+            <label for="photo3">Upload Photo 3</label>
             <input type="file" id="photo3" name="photo3" class="form-control">
-            <small class="form-text text-muted">Current photo: <%= photo3 != null && !photo3.isEmpty() ? photo3 : "No photo available" %></small>
         </div>
 
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="editVehicles.jsp" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Update Vehicle</button>
     </form>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

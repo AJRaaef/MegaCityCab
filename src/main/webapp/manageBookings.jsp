@@ -13,11 +13,14 @@
     ResultSet rs = null;
 
     // Handle status update
+// Handle status update
     if (request.getMethod().equalsIgnoreCase("POST")) {
         String bookingIdStr = request.getParameter("bookingId");
         String newStatus = request.getParameter("status");
 
         if (bookingIdStr != null && !bookingIdStr.isEmpty() && newStatus != null && !newStatus.isEmpty()) {
+           
+
             try {
                 int bookingId = Integer.parseInt(bookingIdStr);
                 conn = DBConnection.getConnection();
@@ -27,22 +30,45 @@
                 }
 
                 // Update the booking status
-                String updateQuery = "UPDATE bookings SET status = ? WHERE booking_id = ?";
-                ps = conn.prepareStatement(updateQuery);
+                String updateBookingQuery = "UPDATE bookings SET status = ? WHERE booking_id = ?";
+                ps = conn.prepareStatement(updateBookingQuery);
                 ps.setString(1, newStatus);
                 ps.setInt(2, bookingId);
                 int rowsUpdated = ps.executeUpdate();
+                ps.close(); // Close statement before reuse
 
                 if (rowsUpdated > 0) {
                     System.out.println("<h3 style='color: green;'>Booking status updated successfully.</h3>");
+
+                    // If the booking is confirmed, fetch the vehicle_id and update vehicle status to 'processing'
+                    if (newStatus.equalsIgnoreCase("confirmed")) {
+                        String getVehicleQuery = "SELECT vehicle_id FROM bookings WHERE booking_id = ?";
+                        ps = conn.prepareStatement(getVehicleQuery);
+                        ps.setInt(1, bookingId);
+                        rs = ps.executeQuery();
+
+                        if (rs.next()) {
+                            int vehicleId = rs.getInt("vehicle_id");
+                            rs.close();
+                            ps.close(); // Close before reuse
+
+                            // Update vehicle status
+                            String updateVehicleQuery = "UPDATE vehicles SET status = 'processing' WHERE id = ?";
+                            ps = conn.prepareStatement(updateVehicleQuery);
+                            ps.setInt(1, vehicleId);
+                            ps.executeUpdate();
+                            System.out.println("<h3 style='color: green;'>Vehicle status updated to 'processing'.</h3>");
+                        }
+                    }
                 } else {
                     System.out.println("<h3 style='color: red;'>Error: Unable to update booking status.</h3>");
                 }
             } catch (SQLException | NumberFormatException e) {
                 e.printStackTrace();
-                System.out.println("<h3 style='color: red;'>Error: Unable to update booking status.</h3>");
+                System.out.println("<h3 style='color: red;'>Error: Unable to update booking or vehicle status.</h3>");
             } finally {
                 try {
+                    if (rs != null) rs.close();
                     if (ps != null) ps.close();
                     if (conn != null) conn.close();
                 } catch (SQLException e) {
@@ -52,7 +78,7 @@
         }
     }
 
-    // Fetch all bookings with customer, vehicle, and driver details
+// Fetch all bookings with customer, vehicle, and driver details
     List<String[]> bookings = new ArrayList<>();
     try {
         conn = DBConnection.getConnection();
@@ -111,6 +137,7 @@
             e.printStackTrace();
         }
     }
+
 %>
 
 <!DOCTYPE html>

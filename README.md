@@ -66,5 +66,14 @@ The project uses a clean **MVC architecture** to separate concerns:
 
 ---
 
-## 📂 Folder Structure
+## Image Screenshot
+
+<table>
+  <tr>
+    <td><img src="assets/first.png" alt="Login UI" width="250"/></td>
+    <td><img src="assets/second.png" alt="Dog Info" width="250"/></td>
+    <td><img src="assets/thirdd.png" alt="View Items UI" width="250"/></td>
+  </tr>
+</table>
+
 
